@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Emoji Maker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    .emoji-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .emoji {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100px;
+    }
+    .emoji img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 5px;
+    }
+    input[type="file"], input[type="text"] {
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #chatBox {
+      margin-top: 20px;
+      text-align: left;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    #chatLog {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    #chatInput {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <h1>Custom Emoji Maker</h1>
+  <p>Upload an image and name your custom emoji!</p>
+  <form id="emojiForm">
+    <input type="file" id="emojiImage" accept="image/*" required><br>
+    <input type="text" id="emojiName" placeholder="Emoji Name" required><br>
+    <button type="submit">Add Emoji</button>
+  </form>
+  <div class="emoji-container" id="emojiContainer"></div>
+
+  <h2>Chat Test</h2>
+  <div id="chatBox">
+    <div id="chatLog"></div>
+    <input type="text" id="chatInput" placeholder="Type a message and use :emoji_name: for emojis">
+  </div>
+
+  <script>
+    const form = document.getElementById('emojiForm');
+    const emojiContainer = document.getElementById('emojiContainer');
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+
+    const emojis = {}; // Store emoji names and their corresponding image data
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const fileInput = document.getElementById('emojiImage');
+      const nameInput = document.getElementById('emojiName');
+      const file = fileInput.files[0];
+      const name = nameInput.value.trim();
+
+      if (file && name) {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const emojiDiv = document.createElement('div');
+          emojiDiv.classList.add('emoji');
+
+          const img = document.createElement('img');
+          img.src = reader.result;
+          img.alt = name;
+
+          const caption = document.createElement('p');
+          caption.textContent = `:${name}:`;
+
+          emojiDiv.appendChild(img);
+          emojiDiv.appendChild(caption);
+          emojiContainer.appendChild(emojiDiv);
+
+          // Save the emoji to the emojis object
+          emojis[name] = reader.result;
+
+          // Reset the form
+          form.reset();
+        };
+
+        reader.readAsDataURL(file);
+      }
+    });
+
+    chatInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        const message = chatInput.value.trim();
+
+        if (message) {
+          let formattedMessage = message;
+
+          // Replace emoji names with corresponding images
+          for (const [name, src] of Object.entries(emojis)) {
+            const emojiTag = `:${name}:`;
+            if (formattedMessage.includes(emojiTag)) {
+              formattedMessage = formattedMessage.replaceAll(
+                emojiTag,
+                `<img src="${src}" alt="${name}" style="width: 20px; height: 20px; vertical-align: middle;">`
+              );
+            }
+          }
+
+          const messageDiv = document.createElement('div');
+          messageDiv.innerHTML = formattedMessage;
+          chatLog.appendChild(messageDiv);
+
+          // Scroll to the bottom of the chat log
+          chatLog.scrollTop = chatLog.scrollHeight;
+
+          // Clear the input
+          chatInput.value = '';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
